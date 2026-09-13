@@ -80,6 +80,8 @@ struct TaskView: View {
                 ForEach(tasks) { task in
                     TaskRow(task: task)
                         .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
                 HStack(alignment: .firstTextBaseline){
                     Image(systemName: "circle.dotted").opacity(0.5)
@@ -95,8 +97,12 @@ struct TaskView: View {
                             }
                         }
                 }.listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
                 
             }.listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color.clear)
             
         }
     }

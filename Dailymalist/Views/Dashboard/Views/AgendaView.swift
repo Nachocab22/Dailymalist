@@ -74,30 +74,45 @@ struct AgendaView: View {
                 events.isEmpty && !selectedCalendarIDs.isEmpty ? Text("No hay eventos programados").padding().foregroundStyle(.gray) : nil
                 List {
                     let allDayEvents = events.filter { $0.isAllDay }
+
                     Section {
                         ForEach(allDayEvents, id: \.self) { event in
                             EventRow(event: event)
                                 .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(
+                                    EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
+                                )
                         }
                     }
+
                     Section {
-                        !allDayEvents.isEmpty ? Rectangle()
+                        if !allDayEvents.isEmpty {
+                            Rectangle()
                                 .opacity(0.2)
                                 .frame(height: 2)
-                            .cornerRadius(10) : nil
-                        ForEach(events
-                            .filter { !$0.isAllDay }
-                            .sorted { $0.startDate < $1.startDate },
+                                .cornerRadius(10)
+                                .listRowBackground(Color.clear)
+                        }
+
+                        ForEach(
+                            events
+                                .filter { !$0.isAllDay }
+                                .sorted { $0.startDate < $1.startDate },
                             id: \.self
                         ) { event in
                             EventRow(event: event)
                                 .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
+                                .listRowBackground(Color.clear)
+                                .listRowInsets(
+                                    EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
+                                )
                         }
                     }
                 }
                 .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
                 .refreshable{
                     await MainActor.run {
                         refreshTrigger += 1
@@ -217,6 +232,7 @@ struct AgendaView: View {
 
 struct EventRow: View {
     
+    @Environment(\.colorScheme) private var colorScheme
     let event: EKEvent
     
     var body: some View {
@@ -247,9 +263,15 @@ struct EventRow: View {
                 
             }
             .padding()
-            .cornerRadius(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(lineWidth: 2)
-            )
+            .background {
+                RoundedRectangle(cornerRadius: 10).fill(
+                    Color(hex: colorScheme == .dark ? 0x1C1C1E : 0xFFFFFF)
+                )
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color(uiColor: .gray), lineWidth: 2)
+            }
         } else {
             HStack(alignment: .top){
                 VStack(alignment: .leading, spacing: 6){
@@ -275,9 +297,15 @@ struct EventRow: View {
                 
             }
             .padding()
-            .cornerRadius(10)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(lineWidth: 2)
-            )
+            .background {
+                RoundedRectangle(cornerRadius: 10).fill(
+                    Color(hex: colorScheme == .dark ? 0x1C1C1E : 0xFFFFFF)
+                )
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color(uiColor: .gray), lineWidth: 2)
+            }
         }
     }
 }

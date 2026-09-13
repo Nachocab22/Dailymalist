@@ -10,16 +10,17 @@ import SwiftUI
 struct DashboardView: View {
     
     @State private var isPortrait: Bool = !UIDevice.current.orientation.isLandscape
+    @Environment(\.colorScheme) private var colorScheme
 
     @State var selectedDay = Date.now
     @State var isCalendarShown: Bool = false
     
     var body: some View {
-        
-        TitleSection(selectedDay: $selectedDay, isCalendarShown: $isCalendarShown)
-        
-        GeometryReader { geometry in
-            if(!isPortrait){
+        VStack(spacing: 0) {
+            TitleSection(selectedDay: $selectedDay, isCalendarShown: $isCalendarShown)
+            
+            GeometryReader { geometry in
+                if(!isPortrait){
                     
                     let agendaWidth = geometry.size.width * 0.35
                     let taskWidth = geometry.size.width * 0.35
@@ -32,36 +33,39 @@ struct DashboardView: View {
                     }.frame(width: geometry.size.width, height: geometry.size.height)
                         .padding(.horizontal, 24)
                     
-            } else {
-                VStack() {
-                    HStack {
-                        AgendaView(day: selectedDay)
-                        TaskView(day: selectedDay)
-                        
+                } else {
+                    VStack() {
+                        HStack {
+                            AgendaView(day: selectedDay)
+                            TaskView(day: selectedDay)
+                            
+                        }
+                        HabitView(isPortrait: isPortrait, day: selectedDay)
                     }
-                    HabitView(isPortrait: isPortrait, day: selectedDay)
                 }
+            }.onReceive(
+                NotificationCenter.default.publisher(
+                    for: UIDevice.orientationDidChangeNotification
+                )
+            ){ _ in
+                let orientation = UIDevice.current.orientation
+                
+                // Ignora estados transitorios como faceUp, faceDown o unknown.
+                guard orientation.isPortrait || orientation.isLandscape else {
+                    return
+                }
+                
+                isPortrait = orientation.isPortrait
             }
-        }.onReceive(
-            NotificationCenter.default.publisher(
-                            for: UIDevice.orientationDidChangeNotification
-            )
-        ){ _ in
-            let orientation = UIDevice.current.orientation
-
-            // Ignora estados transitorios como faceUp, faceDown o unknown.
-            guard orientation.isPortrait || orientation.isLandscape else {
-                return
-            }
-
-            isPortrait = orientation.isPortrait
-        }
+        }.background(Color(hex: colorScheme == .dark ? 0x111214 : 0xF7F7F4))
     }
 }
 
 
 struct TitleSection: View {
         
+    @Environment(\.colorScheme) private var colorScheme
+    
     @Binding var selectedDay: Date
     @Binding var isCalendarShown: Bool
     
@@ -86,9 +90,17 @@ struct TitleSection: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading){
 
-                Text("Dailymalist")
-                    .font(.custom("Default", size: 50))
-                    .bold()
+                HStack(spacing: 12){
+                    Image(colorScheme == .dark ? "DailymalistLogoDark" : "DailymalistLogoLight")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 54, height: 54)
+                    
+                    Text("Dailymalist")
+                        .font(.custom("Default", size: 50))
+                        .bold()
+                }
+                
                 HStack(alignment: .center){
                     Button(action: {isCalendarShown = true}, label: {
                         Text(selectedDay, format: .dateTime .day() .month(.wide) .year())
@@ -156,4 +168,16 @@ struct TitleSection: View {
 #Preview("Ingles") {
     DashboardView()
         .environment(\.locale, Locale(identifier: "en_GB"))
+}
+
+extension Color {
+    init(hex: UInt32, opacity: Double = 1) {
+        self.init(
+            .sRGB,
+            red: Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255,
+            opacity: opacity
+        )
+    }
 }
