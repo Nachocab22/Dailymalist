@@ -76,12 +76,12 @@ struct HabitView: View {
     let iconos: [String] = [
         "figure.strengthtraining.traditional",
         "figure.run",
-        "book",
-        "paintbrush.pointed",
+        "book.fill",
+        "paintbrush.pointed.fill",
         "figure.jumprope",
         "figure.run.treadmill",
         "figure.walk",
-        "sunrise",
+        "sunrise.fill",
         "figure.pool.swim",
         "figure.fencing",
     ]
