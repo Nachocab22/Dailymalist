@@ -116,13 +116,13 @@ struct AgendaView: View {
                 .refreshable{
                     await MainActor.run {
                         refreshTrigger += 1
-                        retrieveEvents()
                     }
                 }
             }
         }
         .task { loadAgenda() }
-        .onChange(of: day){ retrieveEvents() }
+        .onChange(of: day){ loadAgenda() }
+        .onChange(of: refreshTrigger) { loadAgenda() }
         .sheet(isPresented: $isCalendarChooseShown, content: {
             NavigationStack{
                 List(calendars, id: \.calendarIdentifier){ calendar in
