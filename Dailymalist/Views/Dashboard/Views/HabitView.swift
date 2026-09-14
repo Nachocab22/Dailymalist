@@ -164,7 +164,7 @@ struct HabitView: View {
                                 .clipShape(Capsule())
                                 .overlay(alignment: .topLeading) {
                                     if visibleArchiveHabitID == habit.id {
-                                        ArchiveUpperButton(habit: habit)
+                                        PauseUpperButton(habit: habit)
                                             .offset(x: -8, y: -8)
                                             .transition(
                                                 .scale.combined(with: .opacity)
@@ -328,14 +328,6 @@ struct HabitView: View {
                                     }
                                     .tint(.orange)
                                 }
-                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                    Button {
-                                        activeHabit.isActive = false
-                                    } label: {
-                                        Label("Pausar", systemImage: "pause.fill")
-                                    }
-                                    .tint(.yellow)
-                                }
                         }
                     }
                     Section(header: Text("Archivados")) {
@@ -355,14 +347,6 @@ struct HabitView: View {
                                     Label("Modificar", systemImage: "pencil.line")
                                 }
                                 .tint(.orange)
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button {
-                                    archivedHabit.isActive = true
-                                } label: {
-                                    Label("Activar", systemImage: "play.fill")
-                                }
-                                .tint(.green)
                             }
                         }
                     }
@@ -634,7 +618,7 @@ private struct HabitFormView: View {
     }
 }
 
-struct ArchiveUpperButton: View {
+struct PauseUpperButton: View {
     
     @Bindable var habit: Habit
     
@@ -656,15 +640,33 @@ struct ArchiveUpperButton: View {
 
 struct HabitDetailElement: View {
     
+    @Environment(\.colorScheme) private var colorScheme
     @Bindable var habit: Habit
     
     var body: some View {
         HStack{
             Image(systemName: habit.icon)
-                .font(.largeTitle)
+                .font(.title)
 
             Text(habit.title)
                 .font(.title2)
+
+            Spacer()
+
+            Button {
+                habit.isActive.toggle()
+            } label: {
+                Image(systemName: habit.isActive ? "pause.fill" : "play.fill")
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        (habit.isActive ? Color.yellow : Color.green),
+                        in: Circle()
+                    )
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(habit.isActive ? "Pausar" : "Activar") hábito \(habit.title)")
         }
     }
     
