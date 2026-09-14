@@ -77,6 +77,13 @@ struct TaskView: View {
                             .padding(.vertical, 8)
                             .modifier(PriorityCardRow(position: .middle))
                     }
+                    
+                    if(pendingPriorityTasks.count == 0){
+                        Text("TODO COMPLETADO 🎉")
+                            .font(Font.system(size: 16, weight: .semibold))
+                            .foregroundStyle(.gray)
+                            .modifier(PriorityCardRow(position: .middle))
+                    }
 
                     if showsCompletedPriorityTasks {
                         ForEach(completedPriorityTasks) { task in
