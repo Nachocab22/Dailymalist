@@ -115,6 +115,7 @@ struct HabitView: View {
                     .font(Font.system(size: 30, weight: .semibold))
                 Image(systemName: "arrow.up.forward.square")
                     .font(.headline)
+                    .foregroundStyle(.gray)
             }
             .padding()
             .buttonStyle(.plain)
@@ -142,7 +143,7 @@ struct HabitView: View {
                                             systemName: habit.isCompleted(
                                                 on: day,
                                                 calendar: calendar
-                                            ) ? "checkmark.square.fill" : "square"
+                                            ) ? "inset.filled.circle" : "circle"
                                         )
                                         .foregroundStyle(
                                             habit.isCompleted(
@@ -150,11 +151,16 @@ struct HabitView: View {
                                                 calendar: calendar
                                             ) ? .blue : .primary
                                         )
-                                        .font(.largeTitle)
+                                        .font(.title)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
                                     }
                                 }
                                 .padding()
-                                .background(.gray.opacity(0.2))
+                                .background(habit.isCompleted(
+                                    on: day,
+                                    calendar: calendar
+                                ) ? .blue.opacity(0.2) : .gray.opacity(0.2))
                                 .clipShape(Capsule())
                                 .overlay(alignment: .topLeading) {
                                     if visibleArchiveHabitID == habit.id {
@@ -198,7 +204,7 @@ struct HabitView: View {
                                                     on: day,
                                                     calendar: calendar
                                                 )
-                                                ? "checkmark.square.fill": "square"
+                                                ? "inset.filled.circle": "circle"
                                             )
                                             .foregroundStyle(
                                                 habit.isCompleted(
@@ -207,7 +213,9 @@ struct HabitView: View {
                                                 )
                                                 ? .blue: .primary
                                             )
-                                            .font(.largeTitle)
+                                            .font(.title)
+                                            .frame(minWidth: 44, minHeight: 44)
+                                            .contentShape(Rectangle())
                                         }
                                         .buttonStyle(.plain)
 
@@ -217,7 +225,12 @@ struct HabitView: View {
                                         Text(habit.title)
                                             .font(.title2)
                                     }
-                                    .padding(.vertical, 8)
+                                    .padding()
+                                    .background(habit.isCompleted(
+                                        on: day,
+                                        calendar: calendar
+                                    ) ? .blue.opacity(0.2) : Color.clear)
+                                    .clipShape(Capsule())
                                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                         Button {
                                             habit.isActive = false
