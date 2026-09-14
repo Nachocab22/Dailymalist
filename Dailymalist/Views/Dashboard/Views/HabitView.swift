@@ -129,7 +129,7 @@ struct HabitView: View {
                                     } label: {
                                         Image(systemName: habit.icon).font(.largeTitle)
                                     }.buttonStyle(.plain)
-                                        .accessibilityLabel("Mostrar opción de archivar \(habit.title)")
+                                        .accessibilityLabel("Mostrar opción de pausar \(habit.title)")
                                     
                                     Button{
                                         habit.toggleCompletion(
@@ -211,7 +211,7 @@ struct HabitView: View {
                                         Button {
                                             habit.isActive = false
                                         } label: {
-                                            Label("Archivar", systemImage: "archivebox.fill")
+                                            Label("Pausar", systemImage: "pause.fill")
                                         }
                                         .tint(.yellow)
                                     }
@@ -260,7 +260,7 @@ struct HabitView: View {
                 }
 
                 if let habit = habitToUnarchive {
-                    Button("Desarchivar «\(habit.title)»") {
+                    Button("Activar «\(habit.title)»") {
                         habit.isActive = true
 
                         newHabitTitle = ""
@@ -308,7 +308,7 @@ struct HabitView: View {
                                     Button {
                                         activeHabit.isActive = false
                                     } label: {
-                                        Label("Archivar", systemImage: "archivebox.fill")
+                                        Label("Pausar", systemImage: "pause.fill")
                                     }
                                     .tint(.yellow)
                                 }
@@ -336,7 +336,7 @@ struct HabitView: View {
                                 Button {
                                     archivedHabit.isActive = true
                                 } label: {
-                                    Label("Activar", systemImage: "arrow.up.circle.fill")
+                                    Label("Activar", systemImage: "play.fill")
                                 }
                                 .tint(.green)
                             }
@@ -618,14 +618,14 @@ struct ArchiveUpperButton: View {
         Button {
             habit.isActive = false
         } label: {
-            Image(systemName: "archivebox.fill")
+            Image(systemName: "pause.fill")
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.black)
                 .frame(width: 30, height: 30)
                 .background(.yellow, in: Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Archivar hábito")
+        .accessibilityLabel("Pausar hábito")
 
     }
 }
