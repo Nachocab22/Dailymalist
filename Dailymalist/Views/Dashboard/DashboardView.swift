@@ -22,16 +22,29 @@ struct DashboardView: View {
             GeometryReader { geometry in
                 if(!isPortrait){
                     
-                    let agendaWidth = geometry.size.width * 0.35
-                    let taskWidth = geometry.size.width * 0.35
-                    let habitWidth = geometry.size.width * 0.3
-                    
-                    HStack(alignment: .top) {
-                        AgendaView(day: selectedDay).frame(width: agendaWidth)
-                        TaskView(day: selectedDay).frame(width: taskWidth)
-                        HabitView(isPortrait: isPortrait, day: selectedDay).frame(width: habitWidth)
-                    }.frame(width: geometry.size.width, height: geometry.size.height)
-                        .padding(.horizontal, 24)
+                    let spacing: CGFloat = 12
+                    let horizontalPadding: CGFloat = 24
+                    let availableWidth = max(
+                        0,
+                        geometry.size.width - horizontalPadding * 2 - spacing * 2
+                    )
+
+                    HStack(alignment: .top, spacing: spacing) {
+                        AgendaView(day: selectedDay)
+                            .frame(width: availableWidth * 0.35)
+
+                        TaskView(day: selectedDay)
+                            .frame(width: availableWidth * 0.35)
+
+                        HabitView(isPortrait: isPortrait, day: selectedDay)
+                            .frame(width: availableWidth * 0.30)
+                    }
+                    .padding(.horizontal, horizontalPadding)
+                    .frame(
+                        width: geometry.size.width,
+                        height: geometry.size.height,
+                        alignment: .topLeading
+                    )
                     
                 } else {
                     VStack() {

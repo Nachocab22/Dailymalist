@@ -233,79 +233,122 @@ struct AgendaView: View {
 struct EventRow: View {
     
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
+    
+    @State private var active = false
     let event: EKEvent
     
+    private var calendarColor: Color {
+        Color(cgColor: event.calendar.cgColor)
+    }
+
+    private func isActive(at date: Date) -> Bool {
+        !event.isAllDay &&
+        date >= event.startDate &&
+        date < event.endDate
+    }
+    
     var body: some View {
-        if(event.isAllDay){
-            HStack(alignment: .top){
-                VStack(alignment: .leading, spacing: 6){
-                    Text(event.title ?? "Nuevo evento")
-                        .font(Font.system(size: 18, weight: .bold))
-                    event.location != nil ?
-                    HStack{
-                        Image(systemName: "location.circle")
-                        event.location != nil ? Text(event.location ?? "Sin información") : Text("Sin ubicación").foregroundStyle(Color.gray)
-                    } : nil
-                }.frame(maxWidth: .greatestFiniteMagnitude, alignment: .leading)
-                if(event.location == nil){
-                    ZStack {
-                        Circle()
+        Group {
+            if(event.isAllDay){
+                HStack(alignment: .top){
+                    VStack(alignment: .leading, spacing: 6){
+                        Text(event.title ?? "Nuevo evento")
+                            .font(Font.system(size: 18, weight: .bold))
+                        event.location != nil ?
+                        HStack{
+                            Image(systemName: "location.circle")
+                            event.location != nil ? Text(event.location ?? "Sin información") : Text("Sin ubicación").foregroundStyle(Color.gray)
+                        } : nil
+                    }.frame(maxWidth: .greatestFiniteMagnitude, alignment: .leading)
+                    if(event.location == nil){
+                        ZStack {
+                            Circle()
+                                .fill(Color(cgColor: event.calendar.cgColor))
+                                .frame(width: 15)
+                        }.frame(maxHeight: .infinity, alignment: .center)
+                        
+                    } else {
+                        Rectangle()
                             .fill(Color(cgColor: event.calendar.cgColor))
-                            .frame(width: 15)
-                    }.frame(maxHeight: .infinity, alignment: .center)
+                            .frame(width: 8)
+                            .cornerRadius(10)
+                    }
                     
-                } else {
+                }
+                .padding()
+                .background {
+                    RoundedRectangle(cornerRadius: 10).fill(
+                        Color(hex: colorScheme == .dark ? 0x1C1C1E : 0xFFFFFF)
+                    )
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color(uiColor: .gray), lineWidth: 2)
+                }
+            } else {
+                HStack(alignment: .top){
+                    VStack(alignment: .leading, spacing: 6){
+                        HStack{
+                            event.hasAlarms ? Image(systemName: "bell.fill").foregroundStyle(.yellow) : nil
+                            Text(event.title ?? "Nuevo evento")
+                                .font(Font.system(size: 18, weight: .bold))
+                        }
+                        event.location != nil ?
+                        HStack{
+                            Image(systemName: "location.circle")
+                            event.location != nil ? Text(event.location ?? "Sin información") : Text("Sin ubicación").foregroundStyle(Color.gray)
+                        } : nil
+                        HStack{
+                            Image(systemName: "clock")
+                            Text("\(event.startDate.formatted(date: .omitted, time: .shortened)) - \(event.endDate.formatted(date: .omitted, time: .shortened))")
+                        }
+                    }.frame(maxWidth: .greatestFiniteMagnitude, alignment: .leading)
                     Rectangle()
                         .fill(Color(cgColor: event.calendar.cgColor))
                         .frame(width: 8)
                         .cornerRadius(10)
+                    
                 }
-                
+                .padding()
+                .background {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(
+                            Color(hex: colorScheme == .dark ? 0x1C1C1E : 0xFFFFFF)
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(calendarColor.opacity(active ? 0.14 : 0))
+                        }
+                        .shadow(
+                            color: active
+                                ? calendarColor.opacity(0.30)
+                                : Color.black.opacity(colorScheme == .dark ? 0.20 : 0.07),
+                            radius: active ? 6 : 3,
+                            x: 0,
+                            y: 2
+                        )
+                        .animation(.easeInOut(duration: 0.25), value: active)
+                }
             }
-            .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 10).fill(
-                    Color(hex: colorScheme == .dark ? 0x1C1C1E : 0xFFFFFF)
-                )
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color(uiColor: .gray), lineWidth: 2)
-            }
-        } else {
-            HStack(alignment: .top){
-                VStack(alignment: .leading, spacing: 6){
-                    HStack{
-                        event.hasAlarms ? Image(systemName: "bell.fill").foregroundStyle(.yellow) : nil
-                        Text(event.title ?? "Nuevo evento")
-                            .font(Font.system(size: 18, weight: .bold))
-                    }
-                    event.location != nil ?
-                    HStack{
-                        Image(systemName: "location.circle")
-                        event.location != nil ? Text(event.location ?? "Sin información") : Text("Sin ubicación").foregroundStyle(Color.gray)
-                    } : nil
-                    HStack{
-                        Image(systemName: "clock")
-                        Text("\(event.startDate.formatted(date: .omitted, time: .shortened)) - \(event.endDate.formatted(date: .omitted, time: .shortened))")
-                    }
-                }.frame(maxWidth: .greatestFiniteMagnitude, alignment: .leading)
-                Rectangle()
-                    .fill(Color(cgColor: event.calendar.cgColor))
-                    .frame(width: 8)
-                    .cornerRadius(10)
-                
-            }
-            .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 10).fill(
-                    Color(hex: colorScheme == .dark ? 0x1C1C1E : 0xFFFFFF)
-                )
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color(uiColor: .gray), lineWidth: 2)
-            }
-        }
+        }.task(id: scenePhase) {
+             guard scenePhase == .active, !event.isAllDay else {
+                 return
+             }
+
+             while !Task.isCancelled {
+                 let newActive = isActive(at: .now)
+
+                 if active != newActive {
+                     active = newActive
+                 }
+
+                 do {
+                     try await Task.sleep(for: .seconds(30))
+                 } catch {
+                     return
+                 }
+             }
+         }
     }
 }
