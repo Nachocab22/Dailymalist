@@ -116,7 +116,7 @@ struct AgendaView: View {
                 .refreshable{
                     await MainActor.run {
                         refreshTrigger += 1
-                        loadAgenda()
+                        retrieveEvents()
                     }
                 }
             }
