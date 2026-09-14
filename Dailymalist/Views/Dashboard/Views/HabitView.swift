@@ -131,15 +131,26 @@ struct HabitView: View {
                                     }.buttonStyle(.plain)
                                         .accessibilityLabel("Mostrar opción de pausar \(habit.title)")
                                     
-                                    Button{
+                                    Button {
                                         habit.toggleCompletion(
-                                                on: day,
-                                                in: modelContext
-                                            )
+                                            on: day,
+                                            in: modelContext,
+                                            calendar: calendar
+                                        )
                                     } label: {
-                                        Image(systemName: habit.isCompleted(on: day) ? "checkmark.square.fill" : "square")
-                                            .foregroundStyle(habit.isCompleted(on: day) ? .blue : .primary)
-                                            .font(.largeTitle)
+                                        Image(
+                                            systemName: habit.isCompleted(
+                                                on: day,
+                                                calendar: calendar
+                                            ) ? "checkmark.square.fill" : "square"
+                                        )
+                                        .foregroundStyle(
+                                            habit.isCompleted(
+                                                on: day,
+                                                calendar: calendar
+                                            ) ? .blue : .primary
+                                        )
+                                        .font(.largeTitle)
                                     }
                                 }
                                 .padding()

@@ -24,10 +24,11 @@ final class HabitCompletion {
         id: UUID = UUID(),
         day: Date,
         completedAt: Date = .now,
-        habit: Habit
+        habit: Habit? = nil,
+        calendar: Calendar = .current
     ) {
         self.id = id
-        self.day = Calendar.current.startOfDay(for: day)
+        self.day = calendar.startOfDay(for: day)
         self.completedAt = completedAt
         self.habit = habit
     }

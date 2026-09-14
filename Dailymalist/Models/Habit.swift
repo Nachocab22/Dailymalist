@@ -80,20 +80,27 @@ extension Habit {
         in modelContext: ModelContext,
         calendar: Calendar = .current
     ) {
-        if let existingCompletion = completion(
-            on: date,
-            calendar: calendar
-        ) {
-            // Ya estaba completado: se desmarca eliminando el registro.
-            modelContext.delete(existingCompletion)
+        let existingCompletions = completions.filter {
+            calendar.isDate($0.day, inSameDayAs: date)
+        }
+
+        if !existingCompletions.isEmpty {
+            let ids = Set(existingCompletions.map(\.id))
+
+            completions.removeAll { ids.contains($0.id) }
+
+            for completion in existingCompletions {
+                modelContext.delete(completion)
+            }
         } else {
-            // No estaba completado: se crea el registro del día.
             let newCompletion = HabitCompletion(
                 day: date,
-                habit: self
+                calendar: calendar
             )
 
             modelContext.insert(newCompletion)
+
+            completions.append(newCompletion)
         }
     }
 
