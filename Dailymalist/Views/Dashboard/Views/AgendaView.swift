@@ -236,6 +236,7 @@ struct EventRow: View {
     @Environment(\.scenePhase) private var scenePhase
     
     @State private var active = false
+    @State private var inactive = false
     let event: EKEvent
     
     private var calendarColor: Color {
@@ -246,6 +247,10 @@ struct EventRow: View {
         !event.isAllDay &&
         date >= event.startDate &&
         date < event.endDate
+    }
+
+    private func isInactive(at date: Date) -> Bool {
+        !event.isAllDay && event.endDate <= date
     }
     
     var body: some View {
@@ -331,16 +336,25 @@ struct EventRow: View {
                         .animation(.easeInOut(duration: 0.25), value: active)
                 }
             }
-        }.task(id: scenePhase) {
+        }
+        .saturation(inactive ? 0 : 1)
+        .opacity(inactive ? 0.55 : 1)
+        .animation(.easeInOut(duration: 0.25), value: inactive)
+        .task(id: scenePhase) {
              guard scenePhase == .active, !event.isAllDay else {
                  return
              }
 
              while !Task.isCancelled {
                  let newActive = isActive(at: .now)
+                 let newInactive = isInactive(at: .now)
 
                  if active != newActive {
                      active = newActive
+                 }
+
+                 if inactive != newInactive {
+                     inactive = newInactive
                  }
 
                  do {
