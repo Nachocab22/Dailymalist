@@ -188,80 +188,81 @@ struct HabitView: View {
                     }
                     .padding(.horizontal, 20)
                 } else { ///Vista Horizontal
-                        VStack(alignment: .leading, spacing: 10){
-                            List {
-                                ForEach(todayHabits) { habit in
-                                    HStack(spacing: 8) {
-                                        Button {
-                                            habit.toggleCompletion(
+                    VStack(alignment: .leading, spacing: 10){
+                        List {
+                            ForEach(todayHabits) { habit in
+                                HStack(spacing: 8) {
+                                    Button {
+                                        habit.toggleCompletion(
+                                            on: day,
+                                            in: modelContext,
+                                            calendar: calendar
+                                        )
+                                    } label: {
+                                        Image(
+                                            systemName: habit.isCompleted(
                                                 on: day,
-                                                in: modelContext,
                                                 calendar: calendar
                                             )
-                                        } label: {
-                                            Image(
-                                                systemName: habit.isCompleted(
-                                                    on: day,
-                                                    calendar: calendar
-                                                )
-                                                ? "inset.filled.circle": "circle"
+                                            ? "inset.filled.circle": "circle"
+                                        )
+                                        .foregroundStyle(
+                                            habit.isCompleted(
+                                                on: day,
+                                                calendar: calendar
                                             )
-                                            .foregroundStyle(
-                                                habit.isCompleted(
-                                                    on: day,
-                                                    calendar: calendar
-                                                )
-                                                ? .blue: .primary
-                                            )
-                                            .font(.title)
-                                            .frame(minWidth: 44, minHeight: 44)
-                                            .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-
-                                        Image(systemName: habit.icon)
-                                            .font(.largeTitle)
-
-                                        Text(habit.title)
-                                            .font(.title2)
-                                    }
-                                    .padding()
-                                    .background(habit.isCompleted(
-                                        on: day,
-                                        calendar: calendar
-                                    ) ? .blue.opacity(0.2) : Color.clear)
-                                    .clipShape(Capsule())
-                                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                        Button {
-                                            habit.isActive = false
-                                        } label: {
-                                            Label("Pausar", systemImage: "pause.fill")
-                                        }
-                                        .tint(.yellow)
-                                    }
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(Color.clear)
-                                }
-                                Button(action: {isNewHabitModalShown = true}){
-                                    Image(systemName: "plus")
+                                            ? .blue: .primary
+                                        )
                                         .font(.title)
-                                        .foregroundStyle(.primary)
-                                    Text("Nuevo hábito")
-                                }.buttonStyle(.plain)
-                                    .padding(.vertical, 10)
-                                    .padding(.trailing, 20)
-                                    .padding(.leading)
-                                    .background(.gray.opacity(0.2))
-                                    .clipShape(Capsule())
-                                    .padding(.horizontal, 20)
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(Color.clear)
+                                        .frame(minWidth: 44, minHeight: 44)
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    
+                                    Image(systemName: habit.icon)
+                                        .font(.largeTitle)
+                                    
+                                    Text(habit.title)
+                                        .font(.title2)
+                                }
+                                .padding()
+                                .background(habit.isCompleted(
+                                    on: day,
+                                    calendar: calendar
+                                ) ? .blue.opacity(0.2) : Color.clear)
+                                .clipShape(Capsule())
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    Button {
+                                        habit.isActive = false
+                                    } label: {
+                                        Label("Pausar", systemImage: "pause.fill")
+                                    }
+                                    .tint(.yellow)
+                                }
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
                             }
-                            .listStyle(.plain)
-                            .scrollContentBackground(.hidden)
-                            
+                            Button(action: {isNewHabitModalShown = true}){
+                                Image(systemName: "plus")
+                                    .font(.title)
+                                    .foregroundStyle(.primary)
+                                Text("Nuevo hábito")
+                            }.buttonStyle(.plain)
+                                .padding(.vertical, 10)
+                                .padding(.trailing, 20)
+                                .padding(.leading)
+                                .background(.gray.opacity(0.2))
+                                .clipShape(Capsule())
+                                .padding(.horizontal, 20)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
                         }
-                    }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .scrollIndicators(.hidden)
+                        
+                    }    
+                }
         }
         //Modal nuevo hábito
         .sheet(isPresented: $isNewHabitModalShown, onDismiss: resetHabitForm) {

@@ -112,6 +112,7 @@ struct AgendaView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
+                .scrollIndicators(.hidden)
                 .background(Color.clear)
                 .refreshable{
                     await MainActor.run {
