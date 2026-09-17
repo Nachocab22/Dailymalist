@@ -73,19 +73,6 @@ struct HabitView: View {
     @State private var visibleArchiveHabitID: UUID?
     @State private var archiveHideTask: Task<Void, Never>?
 
-    let iconos: [String] = [
-        "figure.strengthtraining.traditional",
-        "figure.run",
-        "book.fill",
-        "paintbrush.pointed.fill",
-        "figure.jumprope",
-        "figure.run.treadmill",
-        "figure.walk",
-        "sunrise.fill",
-        "figure.pool.swim",
-        "figure.fencing",
-    ]
-    
     let weekIcons: [String] = [
         "l.circle",
         "m.circle",
@@ -95,15 +82,6 @@ struct HabitView: View {
         "s.circle",
         "d.circle",
     ]
-        
-    let columns = [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ]
     ///Fin Campos Form
     
     var body: some View {
@@ -266,18 +244,17 @@ struct HabitView: View {
         }
         //Modal nuevo hábito
         .sheet(isPresented: $isNewHabitModalShown, onDismiss: resetHabitForm) {
-            HabitFormView(
-                newHabitTitle: $newHabitTitle,
-                newHabitIcon: $newHabitIcon,
-                habitRepetitions: $habitRepetitions,
-                isEditing: habitBeingEdited != nil,
-                iconos: iconos,
-                weekIcons: weekIcons,
-                columns: columns,
-                onSave: { createNewHabit() }
-            )
+            NavigationStack {
+                HabitFormView(
+                    newHabitTitle: $newHabitTitle,
+                    newHabitIcon: $newHabitIcon,
+                    habitRepetitions: $habitRepetitions,
+                    isEditing: habitBeingEdited != nil,
+                    weekIcons: weekIcons,
+                    onSave: { createNewHabit() }
+                )
+            }
             ///Fin Modal nuevo hábito
-            .padding(20)
             ///Alerta
             .alert("Posible hábito duplicado", isPresented: $isAlertShown) {
                 Button("Cancelar", role: .cancel) {
@@ -543,79 +520,236 @@ private struct HabitFormView: View {
     @Binding var newHabitIcon: String
     @Binding var habitRepetitions: [String]
     let isEditing: Bool
-    let iconos: [String]
     let weekIcons: [String]
-    let columns: [GridItem]
     let onSave: () -> Void
 
-    // Incluye también los iconos guardados que no estén en el catálogo actual.
-    private var availableIcons: [String] {
-        guard !newHabitIcon.isEmpty, !iconos.contains(newHabitIcon) else {
-            return iconos
-        }
-        return iconos + [newHabitIcon]
+    private var displayedIconName: String {
+        newHabitIcon.isEmpty ? "star.fill" : newHabitIcon
     }
 
     var body: some View {
+        ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Título")
                     .font(.title)
 
                 TextField("Introduce el hábito", text: $newHabitTitle)
+                    .textInputAutocapitalization(.sentences)
+                    .submitLabel(.done)
                     .padding(12)
                     .background(.gray.opacity(0.12))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    
 
                 Text("Icono")
                     .font(.title)
 
-                LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(availableIcons, id: \.self) { icono in
-                        Button {
-                            newHabitIcon = icono
-                        } label: {
-                            Image(systemName: icono)
-                                .font(.title)
-                                .foregroundStyle(newHabitIcon == icono ? .blue : .primary)
-                                .frame(width: 50, height: 50)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 30)
-                                        .fill(newHabitIcon == icono ? .blue.opacity(0.15) : .gray.opacity(0.12))
-                                )
+                NavigationLink {
+                    HabitIconPickerView(selectedIconName: $newHabitIcon)
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: displayedIconName)
+                            .font(.title2)
+                            .frame(width: 44, height: 44)
+                            .background(.blue.opacity(0.15), in: Circle())
+                            .accessibilityHidden(true)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(HabitIconCatalog.icon(named: displayedIconName)?.displayName ?? "Icono actual")
+                                .foregroundStyle(.primary)
+                            Text("Elegir icono")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
-                        .buttonStyle(.plain)
+
+                        Spacer()
+
+                        Image(systemName: "chevron.forward")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                            .accessibilityHidden(true)
                     }
+                    .contentShape(Rectangle())
+                    .padding(12)
+                    .background(.gray.opacity(0.12))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Elegir icono. Selección actual: \(HabitIconCatalog.icon(named: displayedIconName)?.displayName ?? "icono personalizado")")
 
                 Text("Repeticiones")
                     .font(.title)
 
-                HStack(spacing: 20) {
+                LazyVGrid(
+                    columns: [GridItem(.adaptive(minimum: 44), spacing: 12)],
+                    spacing: 12
+                ) {
                     ForEach(weekIcons, id: \.self) { weekDayIcon in
-                        Button {
-                            if habitRepetitions.contains(weekDayIcon) {
-                                habitRepetitions.removeAll { $0 == weekDayIcon }
-                            } else {
-                                habitRepetitions.append(weekDayIcon)
-                            }
-                        } label: {
-                            Image(systemName: habitRepetitions.contains(weekDayIcon) ? weekDayIcon + ".fill" : weekDayIcon)
-                                .font(.largeTitle)
-                                .foregroundStyle(habitRepetitions.contains(weekDayIcon) ? .blue : .primary)
-                        }
+                        repetitionButton(for: weekDayIcon)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                Spacer()
-                Button {
-                    onSave()
-                } label: {
-                    Text(!isEditing ? "Crear hábito" : "Guardar cambios")
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                }
-                .buttonStyle(.borderedProminent)
             }
+            .padding(20)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle(isEditing ? "Editar hábito" : "Nuevo hábito")
+        .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                onSave()
+            } label: {
+                Text(isEditing ? "Guardar cambios" : "Crear hábito")
+                    .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .buttonStyle(.borderedProminent)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .background(.bar)
+        }
+    }
+
+    private func repetitionButton(for weekDayIcon: String) -> some View {
+        let isSelected = habitRepetitions.contains(weekDayIcon)
+
+        return Button {
+            if isSelected {
+                habitRepetitions.removeAll { $0 == weekDayIcon }
+            } else {
+                habitRepetitions.append(weekDayIcon)
+            }
+        } label: {
+            Image(systemName: isSelected ? weekDayIcon + ".fill" : weekDayIcon)
+                .font(.largeTitle)
+                .foregroundStyle(isSelected ? .blue : .primary)
+                .frame(minWidth: 44, minHeight: 44)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(weekdayName(for: weekDayIcon)), \(isSelected ? "seleccionado" : "no seleccionado")")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func weekdayName(for iconName: String) -> String {
+        switch iconName {
+        case "l.circle": "Lunes"
+        case "m.circle": "Martes"
+        case "x.circle": "Miércoles"
+        case "j.circle": "Jueves"
+        case "v.circle": "Viernes"
+        case "s.circle": "Sábado"
+        case "d.circle": "Domingo"
+        default: "Día"
+        }
+    }
+}
+
+private struct HabitIconPickerView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedIconName: String
+    @State private var searchText = ""
+    @State private var selectedCategory: HabitIconCategory?
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 88, maximum: 120), spacing: 12)
+    ]
+
+    private var filteredIcons: [HabitIcon] {
+        HabitIconCatalog.icons.filter { icon in
+            (selectedCategory == nil || icon.category == selectedCategory)
+                && icon.matches(searchText)
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                categoryFilter
+
+                if filteredIcons.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
+                        .padding(.top, 40)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(filteredIcons) { icon in
+                            iconButton(icon)
+                        }
+                    }
+                }
+            }
+            .padding()
+        }
+        .navigationTitle("Elegir icono")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $searchText, prompt: "Buscar iconos")
+    }
+
+    private var categoryFilter: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                categoryButton(title: "Todas", category: nil)
+
+                ForEach(HabitIconCategory.allCases) { category in
+                    categoryButton(title: category.rawValue, category: category)
+                }
+            }
+        }
+        .scrollClipDisabled()
+    }
+
+    private func categoryButton(
+        title: String,
+        category: HabitIconCategory?
+    ) -> some View {
+        let isSelected = selectedCategory == category
+
+        return Button(title) {
+            selectedCategory = category
+        }
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(isSelected ? Color.white : Color.primary)
+        .padding(.horizontal, 14)
+        .frame(minHeight: 36)
+        .background(
+            isSelected ? Color.accentColor : Color.gray.opacity(0.12),
+            in: Capsule()
+        )
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private func iconButton(_ icon: HabitIcon) -> some View {
+        let isSelected = selectedIconName == icon.symbolName
+
+        return Button {
+            selectedIconName = icon.symbolName
+            dismiss()
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: icon.symbolName)
+                    .font(.title)
+                    .frame(height: 32)
+                    .accessibilityHidden(true)
+
+                Text(icon.displayName)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
+            .foregroundStyle(isSelected ? .blue : .primary)
+            .frame(maxWidth: .infinity, minHeight: 82)
+            .padding(6)
+            .background(
+                isSelected ? .blue.opacity(0.15) : .gray.opacity(0.12),
+                in: RoundedRectangle(cornerRadius: 14)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(isSelected ? .blue : .clear, lineWidth: 2)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(icon.displayName)
+        .accessibilityValue(isSelected ? "Seleccionado" : "")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
