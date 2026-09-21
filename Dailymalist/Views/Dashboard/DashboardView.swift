@@ -134,6 +134,7 @@ struct TitleSection: View {
 
                                 Button("Hoy") {
                                     selectedDay = .now
+                                    isCalendarShown = false
                                 }
                                 .buttonStyle(.borderedProminent)
                             }
