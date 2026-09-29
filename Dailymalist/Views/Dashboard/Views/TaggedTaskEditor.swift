@@ -9,6 +9,7 @@ struct TaggedTaskEditor: View {
     var completed = false
     var multiline = true
     var onCommit: () -> Void = {}
+    var focusRequest = 0
     @State private var focused = false
     @State private var unknown: [String] = []
     @State private var showingPrompt = false
@@ -18,7 +19,7 @@ struct TaggedTaskEditor: View {
     var body: some View {
         InlineTaggedTextView(text: $text, tags: $tags, focused: $focused,
                              completed: completed, multiline: multiline,
-                             onSubmit: finishEditing)
+                             onSubmit: finishEditing, availableTags: available, focusRequest: focusRequest)
         .onChange(of: focused) { wasFocused, isFocused in
             if wasFocused && !isFocused { finishEditing() }
         }

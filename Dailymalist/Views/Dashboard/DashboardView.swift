@@ -12,6 +12,8 @@ struct DashboardView: View {
     @State private var isPortrait: Bool = !UIDevice.current.orientation.isLandscape
     @Environment(\.colorScheme) private var colorScheme
 
+    @State private var keyboardVisible = false
+
     @State var selectedDay = Date.now
     @State var isCalendarShown: Bool = false
     
@@ -53,7 +55,9 @@ struct DashboardView: View {
                             TaskView(day: selectedDay)
                             
                         }
-                        HabitView(isPortrait: isPortrait, day: selectedDay)
+                        if !keyboardVisible {
+                            HabitView(isPortrait: isPortrait, day: selectedDay)
+                        }
                     }
                 }
             }.onReceive(
@@ -70,7 +74,16 @@ struct DashboardView: View {
                 
                 isPortrait = orientation.isPortrait
             }
-        }.background(Color(hex: colorScheme == .dark ? 0x111214 : 0xF7F7F4))
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { notification in
+            guard let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+            let screen = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen.bounds ?? .zero
+            keyboardVisible = frame.minY < screen.maxY && frame.height > 0
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardVisible = false
+        }
+        .background(Color(hex: colorScheme == .dark ? 0x111214 : 0xF7F7F4))
     }
 }
 

@@ -11,12 +11,15 @@ struct InlineTaggedTextView: UIViewRepresentable {
     var completed: Bool
     var multiline: Bool
     var onSubmit: () -> Void
+    var availableTags: [TaskTag] = []
+    var focusRequest = 0
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
         view.backgroundColor = .clear
+        view.font = .systemFont(ofSize: 18)
         view.isScrollEnabled = false
         view.textContainerInset = .zero
         view.textContainer.lineFragmentPadding = 0
@@ -28,10 +31,13 @@ struct InlineTaggedTextView: UIViewRepresentable {
 
     func updateUIView(_ view: UITextView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.updating = true
+        defer { context.coordinator.updating = false }
         let signature = tags.map { "\($0.id)|\($0.name)|\($0.red)|\($0.green)|\($0.blue)" }.joined()
         let current = Coordinator.contents(view.attributedText)
         if current.text != text || current.ids != tags.map(\.id)
-            || context.coordinator.signature != signature || context.coordinator.completed != completed {
+            || context.coordinator.signature != signature || context.coordinator.completed != completed
+            || context.coordinator.pendingCaret != nil {
             let selection = view.selectedRange
             let result = NSMutableAttributedString(string: "")
             for tag in tags {
@@ -45,11 +51,21 @@ struct InlineTaggedTextView: UIViewRepresentable {
             }
             result.append(NSAttributedString(string: text, attributes: titleAttributes))
             view.attributedText = result
-            view.selectedRange = NSRange(location: min(selection.location, result.length), length: 0)
+            let caret = context.coordinator.pendingCaret.map { tags.count * 2 + $0 } ?? selection.location
+            view.selectedRange = NSRange(location: min(caret, result.length), length: 0)
+            context.coordinator.pendingCaret = nil
             context.coordinator.signature = signature
             context.coordinator.completed = completed
         }
         view.typingAttributes = titleAttributes
+        context.coordinator.refreshSuggestions(view)
+        if context.coordinator.lastFocusRequest != focusRequest {
+            context.coordinator.lastFocusRequest = focusRequest
+            DispatchQueue.main.async { [weak view] in
+                guard let view, view.window != nil, !view.isFirstResponder else { return }
+                view.becomeFirstResponder()
+            }
+        }
     }
 
     private var titleAttributes: [NSAttributedString.Key: Any] {
@@ -88,6 +104,10 @@ struct InlineTaggedTextView: UIViewRepresentable {
         var parent: InlineTaggedTextView
         var signature = ""
         var completed = false
+        var lastFocusRequest = 0
+        var updating = false
+        var pendingCaret: Int?
+        private var suggestionIDs: [UUID] = []
         init(_ parent: InlineTaggedTextView) { self.parent = parent }
 
         static func contents(_ value: NSAttributedString) -> (text: String, ids: [UUID]) {
@@ -110,8 +130,81 @@ struct InlineTaggedTextView: UIViewRepresentable {
             let value = Self.contents(textView.attributedText)
             parent.text = value.text
             parent.tags.removeAll { !value.ids.contains($0.id) }
+            refreshSuggestions(textView)
         }
-        func textViewDidBeginEditing(_ textView: UITextView) { parent.focused = true }
+        func textViewDidBeginEditing(_ textView: UITextView) {
+            parent.focused = true
+            refreshSuggestions(textView)
+        }
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            if !updating { refreshSuggestions(textView) }
+        }
+
+        func refreshSuggestions(_ view: UITextView) {
+            let active = TagCompletion.active(in: view.text, selection: view.selectedRange)
+            let matches = active.map { token in
+                parent.availableTags.filter { TagCompletion.matches($0.name, query: token.query) }
+                    .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+            } ?? []
+            let ids = matches.map(\.id)
+            guard ids != suggestionIDs else { return }
+            suggestionIDs = ids
+            if matches.isEmpty {
+                view.inputAccessoryView = nil
+            } else {
+                let accessory = UIInputView(frame: CGRect(x: 0, y: 0, width: view.window?.bounds.width ?? 320, height: 48), inputViewStyle: .keyboard)
+                let scroll = UIScrollView()
+                scroll.showsHorizontalScrollIndicator = false
+                scroll.translatesAutoresizingMaskIntoConstraints = false
+                accessory.addSubview(scroll)
+                let stack = UIStackView()
+                stack.axis = .horizontal
+                stack.spacing = 8
+                stack.translatesAutoresizingMaskIntoConstraints = false
+                scroll.addSubview(stack)
+                NSLayoutConstraint.activate([
+                    scroll.leadingAnchor.constraint(equalTo: accessory.leadingAnchor, constant: 8),
+                    scroll.trailingAnchor.constraint(equalTo: accessory.trailingAnchor, constant: -8),
+                    scroll.topAnchor.constraint(equalTo: accessory.topAnchor, constant: 6),
+                    scroll.bottomAnchor.constraint(equalTo: accessory.bottomAnchor, constant: -6),
+                    stack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+                    stack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+                    stack.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+                    stack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
+                    stack.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor)
+                ])
+                for tag in matches {
+                    var config = UIButton.Configuration.tinted()
+                    config.title = tag.name
+                    config.baseBackgroundColor = UIColor(tag.color)
+                    config.baseForegroundColor = .label
+                    config.cornerStyle = .capsule
+                    let button = UIButton(configuration: config, primaryAction: UIAction { [weak self, weak view] _ in
+                        guard let self, let view else { return }
+                        self.choose(tag, in: view)
+                    })
+                    button.accessibilityLabel = "Insertar etiqueta \(tag.name)"
+                    stack.addArrangedSubview(button)
+                }
+                view.inputAccessoryView = accessory
+            }
+            if view.isFirstResponder { view.reloadInputViews() }
+        }
+
+        private func choose(_ tag: TaskTag, in view: UITextView) {
+            guard let token = TagCompletion.active(in: view.text, selection: view.selectedRange) else { return }
+            let prefix = view.attributedText.attributedSubstring(from: NSRange(location: 0, length: token.range.location))
+            pendingCaret = Self.contents(prefix).text.utf16.count
+            let updated = NSMutableAttributedString(attributedString: view.attributedText)
+            updated.deleteCharacters(in: token.range)
+            updating = true
+            view.attributedText = updated
+            view.selectedRange = NSRange(location: token.range.location, length: 0)
+            updating = false
+            parent.text = Self.contents(updated).text
+            if !parent.tags.contains(where: { $0.id == tag.id }) { parent.tags.append(tag) }
+            refreshSuggestions(view)
+        }
         func textViewDidEndEditing(_ textView: UITextView) { parent.focused = false }
         func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
             if text == "\n" && !parent.multiline { parent.onSubmit(); return false }
@@ -134,6 +227,8 @@ struct InlineTaggedTextView: View {
     var completed: Bool
     var multiline: Bool
     var onSubmit: () -> Void
+    var availableTags: [TaskTag] = []
+    var focusRequest = 0
     @FocusState private var editing: Bool
     var body: some View {
         TextField("", text: $text, axis: .vertical)

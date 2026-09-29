@@ -15,6 +15,7 @@ struct TaskView: View {
     @Query private var priorityTasks: [TaskItem]
     @Query private var tasks: [TaskItem]
     
+    @State private var newTaskFocusRequest = 0
     @State private var newTaskTitle = ""
     @State private var newTaskTags: [TaskTag] = []
     @State private var showsCompletedPriorityTasks = false
@@ -121,11 +122,16 @@ struct TaskView: View {
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
-                HStack(alignment: .firstTextBaseline){
+                HStack(alignment: .center){
                     Image(systemName: "circle.dotted").opacity(0.5)
                         .font(.title2)
-                    TaggedTaskEditor(text: $newTaskTitle, tags: $newTaskTags, multiline: false, onCommit: addNewTask)
-                }.listRowSeparator(.hidden)
+                    TaggedTaskEditor(text: $newTaskTitle, tags: $newTaskTags, multiline: false, onCommit: addNewTask, focusRequest: newTaskFocusRequest)
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .center)
+                }
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+                .onTapGesture { newTaskFocusRequest += 1 }
+                .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
                 
