@@ -53,6 +53,7 @@ struct AgendaView: View {
                 } label: {
                     Image(systemName: "calendar.badge.checkmark")
                 }.buttonStyle(.glassProminent)
+                    .tint(.blue.opacity(0.7))
                     .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 20))
             }
             if(selectedCalendarIDs.isEmpty){

@@ -76,6 +76,7 @@ struct TaskView: View {
                 } label: {
                     Text("#Etiquetas")
                 }.buttonStyle(.glassProminent)
+                    .tint(.blue.opacity(0.7))
                     .padding()
             }
             
