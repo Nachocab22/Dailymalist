@@ -809,4 +809,5 @@ struct HabitDetailElement: View {
 
 #Preview {
     HabitView(isPortrait: true)
+        .modelContainer(for: [Habit.self, HabitCompletion.self], inMemory: true)
 }
