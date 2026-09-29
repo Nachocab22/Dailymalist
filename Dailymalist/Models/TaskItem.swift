@@ -12,6 +12,8 @@ import SwiftData
 final class TaskItem {
     @Attribute(.unique) var id: UUID
 
+    var tags: [TaskTag]? = []
+
     var title: String
     var isPriority: Bool
     var scheduledFor: Date

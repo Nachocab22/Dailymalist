@@ -16,9 +16,10 @@ struct TaskView: View {
     @Query private var tasks: [TaskItem]
     
     @State private var newTaskTitle = ""
+    @State private var newTaskTags: [TaskTag] = []
     @State private var showsCompletedPriorityTasks = false
+    @State private var isTagModalShown : Bool = false
     @Environment(\.colorScheme) private var colorScheme
-    @FocusState private var isNewTaskFocused: Bool
     private let day: Date
 
     init(
@@ -64,9 +65,19 @@ struct TaskView: View {
     var body: some View {
         
         VStack(alignment: .leading){
-            Text("Tareas")
-                .font(Font.system(size: 30, weight: .semibold))
-                .padding()
+            HStack {
+                Text("Tareas")
+                    .font(Font.system(size: 30, weight: .semibold))
+                    .padding()
+                Spacer()
+                Button {
+                    isTagModalShown = true
+                } label: {
+                    Text("#Etiquetas")
+                }.buttonStyle(.glassProminent)
+                    .padding()
+            }
+            
             List {
                 if !priorityTasks.isEmpty {
                     priorityHeader
@@ -113,16 +124,7 @@ struct TaskView: View {
                 HStack(alignment: .firstTextBaseline){
                     Image(systemName: "circle.dotted").opacity(0.5)
                         .font(.title2)
-                    TextField("", text: $newTaskTitle)
-                        .focused($isNewTaskFocused)
-                        .onSubmit {
-                            addNewTask()
-                        }
-                        .onChange(of: isNewTaskFocused) { oldValue, newValue in
-                            if oldValue == true && newValue == false {
-                                addNewTask()
-                            }
-                        }
+                    TaggedTaskEditor(text: $newTaskTitle, tags: $newTaskTags, multiline: false, onCommit: addNewTask)
                 }.listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
@@ -131,6 +133,9 @@ struct TaskView: View {
             .scrollContentBackground(.hidden)
             .scrollIndicators(.hidden)
             .background(Color.clear)
+            .sheet(isPresented: $isTagModalShown) {
+                TagManagerView()
+            }
             
         }
     }
@@ -204,9 +209,12 @@ struct TaskView: View {
     private func addNewTask() {
         let title = newTaskTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        guard !title.isEmpty else { return }
+        guard !title.isEmpty || !newTaskTags.isEmpty else { return }
         
-        modelContext.insert(TaskItem(title: title, scheduledFor: day))
+        let task = TaskItem(title: title, scheduledFor: day)
+        task.tags = newTaskTags
+        modelContext.insert(task)
+        newTaskTags = []
         newTaskTitle = ""
     }
     
@@ -214,6 +222,7 @@ struct TaskView: View {
 
 #Preview {
     TaskView()
+        .modelContainer(for: [TaskItem.self, TaskTag.self], inMemory: true)
 }
 
 struct TaskRow: View {
@@ -239,14 +248,13 @@ struct TaskRow: View {
             .buttonStyle(.plain)
             .accessibilityLabel(task.isCompleted ? "Marcar como pendiente" : "Completar tarea")
             .accessibilityValue(task.title)
-            TextField(task.title, text: $task.title, axis: .vertical)
-                .font(Font.system(size: 18))
-                .strikethrough(task.isCompleted)
-                .foregroundStyle(task.isCompleted ? .secondary : .primary)
-                .lineLimit(nil)
+            TaggedTaskEditor(text: $task.title, tags: Binding(
+                get: { task.tags ?? [] },
+                set: { task.tags = $0 }
+            ), completed: task.isCompleted)
                 
                 
-        }.swipeActions(edge: .trailing, allowsFullSwipe: true) {
+        }.swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button {
                 task.deletedAt = .now
             } label: {

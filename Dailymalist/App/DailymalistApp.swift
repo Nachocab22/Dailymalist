@@ -13,6 +13,7 @@ struct DailymalistApp: App {
     private let sharedModelContainer: ModelContainer = {
         let schema = Schema([
             TaskItem.self,
+            TaskTag.self,
             Habit.self,
             HabitCompletion.self
         ])
