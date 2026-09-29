@@ -76,7 +76,7 @@ struct TagManagerView: View {
             .navigationTitle("Etiquetas")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Listo") {
+                    Button("Hecho") {
                         if createInline() { dismiss() }
                     }
                 }

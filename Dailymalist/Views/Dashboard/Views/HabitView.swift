@@ -253,7 +253,15 @@ struct HabitView: View {
                     weekIcons: weekIcons,
                     onSave: { createNewHabit() }
                 )
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Hecho") {
+                            isNewHabitModalShown = false
+                        }
+                    }
+                }
             }
+            
             ///Fin Modal nuevo hábito
             ///Alerta
             .alert("Posible hábito duplicado", isPresented: $isAlertShown) {
@@ -330,7 +338,13 @@ struct HabitView: View {
                     }
                 }
                 .navigationTitle("Hábitos")
-                
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Hecho") {
+                            isDetailModalShown = false
+                        }
+                    }
+                }
             }
             
         })
