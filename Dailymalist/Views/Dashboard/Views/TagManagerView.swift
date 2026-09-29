@@ -72,7 +72,6 @@ struct TagManagerView: View {
 
             }
             .scrollContentBackground(.hidden)
-            .background(.white)
             .navigationTitle("Etiquetas")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -98,8 +97,6 @@ struct TagManagerView: View {
                 Button("Aceptar", role: .cancel) { error = nil }
             } message: { Text(error ?? "") }
         }
-        .preferredColorScheme(.light)
-        .presentationBackground(.white)
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
     }
@@ -131,7 +128,6 @@ struct TagManagerView: View {
             }
             .padding(20)
         }
-        .background(.white)
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle(editing == nil ? "Nueva etiqueta" : "Editar etiqueta")
         .navigationBarTitleDisplayMode(.inline)
