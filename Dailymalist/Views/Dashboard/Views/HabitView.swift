@@ -308,7 +308,7 @@ struct HabitView: View {
                                 }
                         }
                     }
-                    Section(header: Text("Archivados")) {
+                    Section(header: Text("Pausados")) {
                         archivedHabits.isEmpty ? Text("No tienes ningún hábito archivado").foregroundColor(.secondary) : nil
                         ForEach(archivedHabits) { archivedHabit in
                             HabitDetailElement(habit: archivedHabit)
