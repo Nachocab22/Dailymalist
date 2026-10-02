@@ -292,7 +292,8 @@ struct HabitView: View {
             .presentationDetents([.large])
             
         }
-        .padding(.vertical, 20)
+        .padding(.top, isPortrait ? 20 : 0)
+        .padding(.bottom, 20)
         ///Modal detalle hábitos
         .sheet(isPresented: $isDetailModalShown, onDismiss: {
             // Espera a que se cierre el detalle antes de abrir el formulario.

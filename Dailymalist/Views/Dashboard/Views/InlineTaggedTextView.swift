@@ -152,7 +152,12 @@ struct InlineTaggedTextView: UIViewRepresentable {
             if matches.isEmpty {
                 view.inputAccessoryView = nil
             } else {
-                let accessory = UIInputView(frame: CGRect(x: 0, y: 0, width: view.window?.bounds.width ?? 320, height: 48), inputViewStyle: .keyboard)
+                let accessory = UIInputView(frame: CGRect(x: 0, y: 0, width: view.window?.bounds.width ?? 320, height: 48), inputViewStyle: .default)
+                // A solid surface, independent of the keyboard's translucent material.
+                accessory.backgroundColor = .white
+                accessory.isOpaque = true
+                accessory.autoresizingMask = [.flexibleWidth]
+                accessory.overrideUserInterfaceStyle = .light
                 let scroll = UIScrollView()
                 scroll.showsHorizontalScrollIndicator = false
                 scroll.translatesAutoresizingMaskIntoConstraints = false

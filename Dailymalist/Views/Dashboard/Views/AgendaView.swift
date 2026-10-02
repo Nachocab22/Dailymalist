@@ -43,7 +43,7 @@ struct AgendaView: View {
         VStack(alignment: .leading){
             HStack{
                 Text("Agenda")
-                    .font(Font.system(size: 30, weight: .bold))
+                    .font(Font.system(size: 30, weight: .semibold))
                     .padding()
                 Spacer()
                 Button{
