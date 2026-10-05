@@ -24,7 +24,7 @@ struct InlineTaggedTextView: UIViewRepresentable {
         view.textContainerInset = .zero
         view.textContainer.lineFragmentPadding = 0
         view.delegate = context.coordinator
-        view.accessibilityLabel = "Título de la tarea. Borra una etiqueta para quitarla de esta tarea."
+        view.accessibilityLabel = String(localized: "Título de la tarea. Borra una etiqueta para quitarla de esta tarea.")
         view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return view
     }
@@ -188,7 +188,7 @@ struct InlineTaggedTextView: UIViewRepresentable {
                         guard let self, let view else { return }
                         self.choose(tag, in: view)
                     })
-                    button.accessibilityLabel = "Insertar etiqueta \(tag.name)"
+                    button.accessibilityLabel = String(localized: "Insertar etiqueta \(tag.name)")
                     stack.addArrangedSubview(button)
                 }
                 view.inputAccessoryView = accessory

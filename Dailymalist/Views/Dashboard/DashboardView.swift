@@ -55,9 +55,12 @@ struct DashboardView: View {
                             TaskView(day: selectedDay)
                             
                         }
-                        if !keyboardVisible {
-                            HabitView(isPortrait: isPortrait, day: selectedDay)
-                        }
+                        // Conserva la vista que presenta los modales al aparecer el teclado.
+                        HabitView(isPortrait: isPortrait, day: selectedDay)
+                            .frame(height: keyboardVisible ? 0 : nil)
+                            .opacity(keyboardVisible ? 0 : 1)
+                            .allowsHitTesting(!keyboardVisible)
+                            .accessibilityHidden(keyboardVisible)
                     }
                 }
             }.onReceive(
@@ -137,7 +140,7 @@ struct TitleSection: View {
                     .popover(isPresented: $isCalendarShown) {
                         VStack {
                             DatePicker(
-                                "Dia que mostrar",
+                                "Día que mostrar",
                                 selection: $selectedDay,
                                 displayedComponents: .date
                             )

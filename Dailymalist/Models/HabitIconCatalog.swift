@@ -14,21 +14,39 @@ enum HabitIconCategory: String, CaseIterable, Identifiable {
     case other = "Otros"
 
     var id: Self { self }
+
+    func displayName(locale: Locale) -> String {
+        switch self {
+        case .physicalActivity: String(localized: LocalizedStringResource("Actividad física", locale: locale))
+        case .nutrition: String(localized: LocalizedStringResource("Alimentación", locale: locale))
+        case .wellbeing: String(localized: LocalizedStringResource("Bienestar", locale: locale))
+        case .learning: String(localized: LocalizedStringResource("Aprendizaje", locale: locale))
+        case .home: String(localized: LocalizedStringResource("Hogar", locale: locale))
+        case .other: String(localized: LocalizedStringResource("Otros", locale: locale))
+        }
+    }
 }
 
-struct HabitIcon: Identifiable, Hashable {
+struct HabitIcon: Identifiable {
     let symbolName: String
-    let displayName: String
+    let displayName: LocalizedStringResource
     let category: HabitIconCategory
     let keywords: [String]
 
     var id: String { symbolName }
 
-    func matches(_ query: String) -> Bool {
+    // Se resuelve al mostrarlo, usando el mismo idioma que la vista.
+    func localizedDisplayName(locale: Locale) -> String {
+        var name = displayName
+        name.locale = locale
+        return String(localized: name)
+    }
+
+    func matches(_ query: String, locale: Locale) -> Bool {
         let normalizedQuery = query.normalizedForHabitIconSearch
         guard !normalizedQuery.isEmpty else { return true }
 
-        let searchableText = ([displayName, symbolName] + keywords)
+        let searchableText = ([localizedDisplayName(locale: locale), symbolName] + keywords)
             .joined(separator: " ")
             .normalizedForHabitIconSearch
 
@@ -99,7 +117,7 @@ private extension String {
     var normalizedForHabitIconSearch: String {
         folding(
             options: [.caseInsensitive, .diacriticInsensitive],
-            locale: Locale(identifier: "es_ES")
+            locale: .autoupdatingCurrent
         )
         .trimmingCharacters(in: .whitespacesAndNewlines)
     }

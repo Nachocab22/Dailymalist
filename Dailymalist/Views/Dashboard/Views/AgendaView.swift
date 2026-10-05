@@ -67,7 +67,7 @@ struct AgendaView: View {
             }
             else { EmptyView() }
             if calendarError != nil {
-                Text(calendarError ?? "Selecciona los calendarios que mostrar")
+                Text(calendarError ?? String(localized: "Selecciona los calendarios que mostrar"))
                     .font(Font.system(size: 30, weight: .semibold))
                     .foregroundStyle(.red)
                     .padding()
@@ -182,7 +182,7 @@ struct AgendaView: View {
         
         do {
             guard try await store.requestFullAccessToEvents() else {
-                calendarError = "No has permitido el acceso al calendario."
+                calendarError = String(localized: "No has permitido el acceso al calendario.")
                 return
             }
 
@@ -260,12 +260,12 @@ struct EventRow: View {
             if(event.isAllDay){
                 HStack(alignment: .top){
                     VStack(alignment: .leading, spacing: 6){
-                        Text(event.title ?? "Nuevo evento")
+                        Text(event.title ?? String(localized: "Nuevo evento"))
                             .font(Font.system(size: 18, weight: .bold))
                         event.location != nil ?
                         HStack{
                             Image(systemName: "location.circle")
-                            event.location != nil ? Text(event.location ?? "Sin información") : Text("Sin ubicación").foregroundStyle(Color.gray)
+                            event.location != nil ? Text(event.location ?? String(localized: "Sin información")) : Text("Sin ubicación").foregroundStyle(Color.gray)
                         } : nil
                     }.frame(maxWidth: .greatestFiniteMagnitude, alignment: .leading)
                     if(event.location == nil){
@@ -298,13 +298,13 @@ struct EventRow: View {
                     VStack(alignment: .leading, spacing: 6){
                         HStack{
                             event.hasAlarms ? Image(systemName: "bell.fill").foregroundStyle(.yellow) : nil
-                            Text(event.title ?? "Nuevo evento")
+                            Text(event.title ?? String(localized: "Nuevo evento"))
                                 .font(Font.system(size: 18, weight: .bold))
                         }
                         event.location != nil ?
                         HStack{
                             Image(systemName: "location.circle")
-                            event.location != nil ? Text(event.location ?? "Sin información") : Text("Sin ubicación").foregroundStyle(Color.gray)
+                            event.location != nil ? Text(event.location ?? String(localized: "Sin información")) : Text("Sin ubicación").foregroundStyle(Color.gray)
                         } : nil
                         HStack{
                             Image(systemName: "clock")

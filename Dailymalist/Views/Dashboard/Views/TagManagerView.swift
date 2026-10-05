@@ -129,11 +129,11 @@ struct TagManagerView: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle(editing == nil ? "Nueva etiqueta" : "Editar etiqueta")
+        .navigationTitle(editing == nil ? String(localized: "Nueva etiqueta") : String(localized: "Editar etiqueta"))
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             Button(action: submit) {
-                Text(editing == nil ? "Crear etiqueta" : "Guardar cambios")
+                Text(editing == nil ? String(localized: "Crear etiqueta") : String(localized: "Guardar cambios"))
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .buttonStyle(.borderedProminent)
@@ -150,11 +150,11 @@ struct TagManagerView: View {
         let candidate = trimmed.hasPrefix("#") ? String(trimmed.dropFirst()) : trimmed
         guard !candidate.isEmpty else { return true }
         guard TagSyntax.validName(candidate) else {
-            error = "Usa letras, números o guiones bajos, sin espacios."
+            error = String(localized: "Usa letras, números o guiones bajos, sin espacios.")
             return false
         }
         guard !tags.contains(where: { TagSyntax.key($0.name) == TagSyntax.key(candidate) }) else {
-            error = "Ya existe una etiqueta con ese nombre."
+            error = String(localized: "Ya existe una etiqueta con ese nombre.")
             return false
         }
         let tag = TaskTag(name: candidate)
@@ -167,7 +167,7 @@ struct TagManagerView: View {
     private func submit() {
         guard TagSyntax.validName(cleanName) else { return }
         guard !tags.contains(where: { $0.id != editing?.id && TagSyntax.key($0.name) == TagSyntax.key(cleanName) }) else {
-            error = "Ya existe una etiqueta con ese nombre."
+            error = String(localized: "Ya existe una etiqueta con ese nombre.")
             return
         }
         if let editing {

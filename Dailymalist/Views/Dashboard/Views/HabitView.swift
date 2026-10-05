@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct HabitView: View {
+    @Environment(\.locale) private var locale
     
     @Environment(\.modelContext) private var modelContext
     public var isPortrait: Bool
@@ -389,22 +390,22 @@ struct HabitView: View {
 
             if !matches.isEmpty {
                 let details = matches.prefix(3).map { habit in
-                    let status = habit.isActive ? "activo" : "archivado"
+                    let status = habit.isActive ? String(localized: LocalizedStringResource("activo", locale: locale)) : String(localized: LocalizedStringResource("archivado", locale: locale))
                     return "• \(habit.title) (\(status))"
                 }
                 .joined(separator: "\n")
 
                 let extra = matches.count > 3
-                    ? "\nY \(matches.count - 3) más."
+                    ? "\n" + String(localized: LocalizedStringResource("Y \(matches.count - 3) más.", locale: locale))
                     : ""
 
-                duplicateMessage = """
+                duplicateMessage = String(localized: LocalizedStringResource("""
                 Ya tienes hábitos con títulos iguales o parecidos:
 
                 \(details)\(extra)
 
                 ¿Deseas crear el hábito igualmente?
-                """
+                """, locale: locale))
 
                 isAlertShown = true
                 return
@@ -486,13 +487,14 @@ struct HabitView: View {
     private func keywords(from title: String) -> Set<String> {
         let normalized = title.folding(
             options: [.caseInsensitive, .diacriticInsensitive],
-            locale: Locale(identifier: "es_ES")
+            locale: .autoupdatingCurrent
         )
 
         let ignoredWords: Set<String> = [
             "a", "al", "de", "del", "el", "la", "los", "las",
             "un", "una", "unos", "unas", "y", "o",
-            "en", "con", "para", "por", "salir"
+            "en", "con", "para", "por", "salir",
+            "an", "the", "and", "or", "to", "of", "in", "with", "for"
         ]
 
         let words = normalized
@@ -531,6 +533,7 @@ struct HabitView: View {
 
 
 private struct HabitFormView: View {
+    @Environment(\.locale) private var locale
     @Binding var newHabitTitle: String
     @Binding var newHabitIcon: String
     @Binding var habitRepetitions: [String]
@@ -569,7 +572,7 @@ private struct HabitFormView: View {
                             .accessibilityHidden(true)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(HabitIconCatalog.icon(named: displayedIconName)?.displayName ?? "Icono actual")
+                            Text(HabitIconCatalog.icon(named: displayedIconName)?.localizedDisplayName(locale: locale) ?? String(localized: LocalizedStringResource("Icono actual", locale: locale)))
                                 .foregroundStyle(.primary)
                             Text("Elegir icono")
                                 .font(.subheadline)
@@ -589,7 +592,7 @@ private struct HabitFormView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Elegir icono. Selección actual: \(HabitIconCatalog.icon(named: displayedIconName)?.displayName ?? "icono personalizado")")
+                .accessibilityLabel("Elegir icono. Selección actual: \(HabitIconCatalog.icon(named: displayedIconName)?.localizedDisplayName(locale: locale) ?? String(localized: LocalizedStringResource("icono personalizado", locale: locale)))")
 
                 Text("Repeticiones")
                     .font(.title)
@@ -607,13 +610,13 @@ private struct HabitFormView: View {
             .padding(20)
         }
         .scrollDismissesKeyboard(.interactively)
-        .navigationTitle(isEditing ? "Editar hábito" : "Nuevo hábito")
+        .navigationTitle(isEditing ? String(localized: LocalizedStringResource("Editar hábito", locale: locale)) : String(localized: LocalizedStringResource("Nuevo hábito", locale: locale)))
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             Button {
                 onSave()
             } label: {
-                Text(isEditing ? "Guardar cambios" : "Crear hábito")
+                Text(isEditing ? String(localized: LocalizedStringResource("Guardar cambios", locale: locale)) : String(localized: LocalizedStringResource("Crear hábito", locale: locale)))
                     .frame(maxWidth: .infinity, minHeight: 44)
             }
             .buttonStyle(.borderedProminent)
@@ -633,31 +636,46 @@ private struct HabitFormView: View {
                 habitRepetitions.append(weekDayIcon)
             }
         } label: {
-            Image(systemName: isSelected ? weekDayIcon + ".fill" : weekDayIcon)
+            Image(systemName: weekdayInitial(for: weekDayIcon).lowercased() + ".circle" + (isSelected ? ".fill" : ""))
                 .font(.largeTitle)
                 .foregroundStyle(isSelected ? .blue : .primary)
                 .frame(minWidth: 44, minHeight: 44)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(weekdayName(for: weekDayIcon)), \(isSelected ? "seleccionado" : "no seleccionado")")
+        .accessibilityLabel("\(weekdayName(for: weekDayIcon)), \(isSelected ? String(localized: LocalizedStringResource("seleccionado", locale: locale)) : String(localized: LocalizedStringResource("no seleccionado", locale: locale)))")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    // Las claves de selección existentes se conservan; solo cambia la letra visible.
+    private func weekdayInitial(for iconName: String) -> String {
+        switch iconName {
+        case "l.circle": String(localized: LocalizedStringResource("weekday.monday", defaultValue: "L", locale: locale))
+        case "m.circle": String(localized: LocalizedStringResource("weekday.tuesday", defaultValue: "M", locale: locale))
+        case "x.circle": String(localized: LocalizedStringResource("weekday.wednesday", defaultValue: "X", locale: locale))
+        case "j.circle": String(localized: LocalizedStringResource("weekday.thursday", defaultValue: "J", locale: locale))
+        case "v.circle": String(localized: LocalizedStringResource("weekday.friday", defaultValue: "V", locale: locale))
+        case "s.circle": String(localized: LocalizedStringResource("weekday.saturday", defaultValue: "S", locale: locale))
+        case "d.circle": String(localized: LocalizedStringResource("weekday.sunday", defaultValue: "D", locale: locale))
+        default: ""
+        }
     }
 
     private func weekdayName(for iconName: String) -> String {
         switch iconName {
-        case "l.circle": "Lunes"
-        case "m.circle": "Martes"
-        case "x.circle": "Miércoles"
-        case "j.circle": "Jueves"
-        case "v.circle": "Viernes"
-        case "s.circle": "Sábado"
-        case "d.circle": "Domingo"
-        default: "Día"
+        case "l.circle": String(localized: LocalizedStringResource("Lunes", locale: locale))
+        case "m.circle": String(localized: LocalizedStringResource("Martes", locale: locale))
+        case "x.circle": String(localized: LocalizedStringResource("Miércoles", locale: locale))
+        case "j.circle": String(localized: LocalizedStringResource("Jueves", locale: locale))
+        case "v.circle": String(localized: LocalizedStringResource("Viernes", locale: locale))
+        case "s.circle": String(localized: LocalizedStringResource("Sábado", locale: locale))
+        case "d.circle": String(localized: LocalizedStringResource("Domingo", locale: locale))
+        default: String(localized: LocalizedStringResource("Día", locale: locale))
         }
     }
 }
 
 private struct HabitIconPickerView: View {
+    @Environment(\.locale) private var locale
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedIconName: String
     @State private var searchText = ""
@@ -670,7 +688,7 @@ private struct HabitIconPickerView: View {
     private var filteredIcons: [HabitIcon] {
         HabitIconCatalog.icons.filter { icon in
             (selectedCategory == nil || icon.category == selectedCategory)
-                && icon.matches(searchText)
+                && icon.matches(searchText, locale: locale)
         }
     }
 
@@ -700,10 +718,10 @@ private struct HabitIconPickerView: View {
     private var categoryFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                categoryButton(title: "Todas", category: nil)
+                categoryButton(title: String(localized: LocalizedStringResource("Todas", locale: locale)), category: nil)
 
                 ForEach(HabitIconCategory.allCases) { category in
-                    categoryButton(title: category.rawValue, category: category)
+                    categoryButton(title: category.displayName(locale: locale), category: category)
                 }
             }
         }
@@ -744,7 +762,7 @@ private struct HabitIconPickerView: View {
                     .frame(height: 32)
                     .accessibilityHidden(true)
 
-                Text(icon.displayName)
+                Text(icon.localizedDisplayName(locale: locale))
                     .font(.caption)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -762,13 +780,14 @@ private struct HabitIconPickerView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(icon.displayName)
-        .accessibilityValue(isSelected ? "Seleccionado" : "")
+        .accessibilityLabel(icon.localizedDisplayName(locale: locale))
+        .accessibilityValue(isSelected ? String(localized: LocalizedStringResource("Seleccionado", locale: locale)) : "")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
 struct PauseUpperButton: View {
+    @Environment(\.locale) private var locale
     
     @Bindable var habit: Habit
     
@@ -789,6 +808,7 @@ struct PauseUpperButton: View {
 }
 
 struct HabitDetailElement: View {
+    @Environment(\.locale) private var locale
     
     @Environment(\.colorScheme) private var colorScheme
     @Bindable var habit: Habit
@@ -816,7 +836,9 @@ struct HabitDetailElement: View {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(habit.isActive ? "Pausar" : "Activar") hábito \(habit.title)")
+            .accessibilityLabel(habit.isActive
+                ? String(localized: LocalizedStringResource("Pausar hábito \(habit.title)", locale: locale))
+                : String(localized: LocalizedStringResource("Activar hábito \(habit.title)", locale: locale)))
         }
     }
     

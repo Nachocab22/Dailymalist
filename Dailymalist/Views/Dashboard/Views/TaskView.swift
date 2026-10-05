@@ -180,8 +180,7 @@ struct TaskView: View {
     }
 
     private var pendingCount: some View {
-        Text(pendingPriorityTasks.count == 1
-             ? "1 pendiente" : "\(pendingPriorityTasks.count) pendientes")
+        Text("\(pendingPriorityTasks.count) pendientes")
             .font(.caption)
             .foregroundStyle(.secondary)
     }
@@ -198,8 +197,7 @@ struct TaskView: View {
                     HStack(spacing: 8) {
                         Image(systemName: showsCompletedPriorityTasks
                               ? "chevron.up" : "chevron.down")
-                        Text(completedPriorityTasks.count == 1
-                             ? "1 completada" : "\(completedPriorityTasks.count) completadas")
+                        Text("\(completedPriorityTasks.count) completadas")
                     }
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -207,7 +205,7 @@ struct TaskView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityValue(showsCompletedPriorityTasks ? "Desplegado" : "Plegado")
+                .accessibilityValue(showsCompletedPriorityTasks ? String(localized: "Desplegado") : String(localized: "Plegado"))
             }
         }
         .padding(.bottom, 12)
@@ -253,7 +251,7 @@ struct TaskRow: View {
                     .font(.title2)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(task.isCompleted ? "Marcar como pendiente" : "Completar tarea")
+            .accessibilityLabel(task.isCompleted ? String(localized: "Marcar como pendiente") : String(localized: "Completar tarea"))
             .accessibilityValue(task.title)
             TaggedTaskEditor(text: $task.title, tags: Binding(
                 get: { task.tags ?? [] },
@@ -272,7 +270,7 @@ struct TaskRow: View {
                 task.isPriority.toggle()
             } label: {
                 Label(
-                    task.isPriority ? "No urgente" : "Urgente",
+                    task.isPriority ? String(localized: "No urgente") : String(localized: "Urgente"),
                     systemImage: task.isPriority ? "xmark.octagon" : "exclamationmark.octagon"
                 )
             }.tint(task.isPriority ? .gray : .orange)
